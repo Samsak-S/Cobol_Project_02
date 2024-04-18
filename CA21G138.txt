@@ -1,0 +1,19 @@
+       IDENTIFICATION DIVISION.                                         00010000
+       PROGRAM-ID. CA21G138.                                            00020000
+       DATA DIVISION.                                                   00030001
+       WORKING-STORAGE SECTION.                                         00040002
+       LINKAGE SECTION.                                                 00050000
+       77 LK-NO-OF-SHARES             PIC 9(03).                        00060000
+       77 LK-OUT-SHR-PRICE            PIC 9(05)V9(03).                  00070000
+       77 LK-INC-TAX                  PIC 9(04)V9(03).                  00080000
+       77 LK-CURR-PRICE               PIC 9(03)V9(02).                  00090002
+       77 LK-PER-HELD                 PIC 9(02).                        00100000
+       PROCEDURE DIVISION USING LK-NO-OF-SHARES LK-OUT-SHR-PRICE        00110000
+                                LK-INC-TAX LK-CURR-PRICE LK-PER-HELD.   00120005
+      *************** CALCULATION-OF-PRICES & TAX ****************      00130005
+           COMPUTE LK-OUT-SHR-PRICE = LK-NO-OF-SHARES * LK-CURR-PRICE.  00140002
+           COMPUTE LK-INC-TAX =                                         00150003
+                   (LK-OUT-SHR-PRICE / LK-CURR-PRICE) * LK-PER-HELD.    00160004
+           GOBACK.                                                      00170002
+      ******************* END-OF-SUB-PROGRAM *********************      00180005
+

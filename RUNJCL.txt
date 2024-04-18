@@ -1,0 +1,19 @@
+//TECN138R JOB NOTIFY=&SYSUID                                           00010000
+//STEP01 EXEC PGM=IEFBR14                                               00020000
+//DD1 DD DSN=TECN138.L1J.SHARE.ERR,                                     00030003
+//       DISP=(MOD,DELETE,DELETE),                                      00040000
+//       SPACE=(TRK,(2,2))                                              00050000
+//STEP02 EXEC PGM=IEFBR14                                               00060000
+//DD2 DD DSN=TECN138.L1J.SHARE.ERR,                                     00070003
+//       DISP=(NEW,CATLG,DELETE),                                       00080000
+//       VOLUME=SER=ZAPRD4,                                             00081000
+//       SPACE=(TRK,(2,2)),                                             00090000
+//       DCB=(DSORG=PS,LRECL=80,RECFM=FB)                               00100002
+//RUN EXEC PGM=CA11G138                        --> MEMBER NAME          00120000
+//STEPLIB DD DSN=TECN138.COBOL1.LOADLIB,DISP=SHR                        00130000
+//SYSPRINT DD SYSOUT=*                                                  00140000
+//INPSHRPS DD DSN=TECN138.L1J.SHARE.PS2,DISP=SHR                        00150000
+//OUTSHRKS DD DSN=TECN138.L1J.SHARE.KSDS,DISP=SHR                       00160000
+//ERRSHRPS DD DSN=TECN138.L1J.SHARE.ERR,DISP=SHR                        00161004
+//SYSIN DD DUMMY                                                        00170000
+

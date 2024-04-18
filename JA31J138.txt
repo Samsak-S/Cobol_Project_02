@@ -1,0 +1,44 @@
+//TECN138C JOB NOTIFY=&SYSUID                                           00010001
+//STEP010 EXEC PGM=IEFBR14                                              00020001
+//DD1 DD DSN=TECN138.L1J.SHARE.ACC,                                     00030001
+//       DISP=(MOD,DELETE,DELETE),                                      00040001
+//       LIKE=TECN138.L1J.SHARE.PS1                                     00050001
+//DD2 DD DSN=TECN138.L1J.SHARE.INFY,                                    00060001
+//       DISP=(MOD,DELETE,DELETE),                                      00070001
+//       LIKE=TECN138.L1J.SHARE.PS1                                     00080001
+//DD3 DD DSN=TECN138.L1J.SHARE.PS3,                                     00090001
+//       DISP=(MOD,DELETE,DELETE),                                      00100001
+//       LIKE=TECN138.L1J.SHARE.PS1                                     00110001
+//SYSPRINT DD SYSOUT=*                                                  00120001
+//SYSOUT DD SYSOUT=*                                                    00130001
+//SYSIN DD DUMMY                                                        00140001
+//STEP020 EXEC PGM=SORT                                                 00150001
+//SYSPRINT DD SYSOUT=*                                                  00160001
+//SYSOUT DD SYSOUT=*                                                    00170001
+//SORTIN DD DSN=TECN138.L1J.SHARE.PS2,DISP=SHR                          00180001
+//SORTOF01 DD DSN=TECN138.L1J.SHARE.ACC,                                00190001
+//            DISP=(NEW,CATLG,DELETE),                                  00200001
+//            LIKE=TECN138.L1J.SHARE.PS1,                               00210001
+//            VOLUME=SER=ZAPRD4                                         00220001
+//SORTOF02 DD DSN=TECN138.L1J.SHARE.INFY,                               00230001
+//            DISP=(NEW,CATLG,DELETE),                                  00240001
+//            LIKE=TECN138.L1J.SHARE.PS2,                               00250001
+//            VOLUME=SER=ZAPRD4                                         00260001
+//SYSIN DD *                                                            00270001
+  SORT FIELDS=(1,5,CH,A)                                                00280001
+  OUTFIL FILES=01,INCLUDE=(14,3,CH,EQ,C'ACC')                           00290001
+  OUTFIL FILES=02,INCLUDE=(14,4,CH,EQ,C'INFY')                          00300001
+/*                                                                      00310001
+//STEP030 EXEC PGM=SORT                                                 00320001
+//SYSPRINT DD SYSOUT=*                                                  00330001
+//SYSOUT DD SYSOUT=*                                                    00340001
+//SORTIN01 DD DSN=TECN138.L1J.SHARE.ACC,DISP=SHR                        00350001
+//SORTIN02 DD DSN=TECN138.L1J.SHARE.INFY,DISP=SHR                       00360001
+//SORTOUT DD DSN=TECN138.L1J.SHARE.PS3,                                 00370001
+//            DISP=(NEW,CATLG,DELETE),                                  00380001
+//            LIKE=TECN138.L1J.SHARE.PS1,                               00390001
+//            VOLUME=SER=ZAPRD4                                         00400001
+//SYSIN DD *                                                            00410001
+  MERGE FIELDS=(1,5,CH,A)                                               00420001
+/*                                                                      00430001
+

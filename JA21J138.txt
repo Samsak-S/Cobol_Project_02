@@ -1,0 +1,25 @@
+//TECN138B JOB NOTIFY=&SYSUID                                           00010001
+//STEP010 EXEC PGM=IEFBR14                                              00020001
+//DD1 DD DSN=TECN138.L1J.SHARE.PS2,                                     00030001
+//       DISP=(MOD,DELETE,DELETE),                                      00040001
+//       LIKE=TECN138.L1J.SHARE.PS1                                     00050001
+//SYSPRINT DD SYSOUT=*                                                  00060001
+//SYSOUT DD SYSOUT=*                                                    00070001
+//SYSIN DD DUMMY                                                        00080001
+//STEP020 EXEC PGM=SORT                                                 00090001
+//SYSPRINT DD SYSOUT=*                                                  00100001
+//SYSOUT DD SYSOUT=*                                                    00110001
+//SORTIN DD DSN=TECN138.L1J.SHARE.PS1,DISP=SHR                          00120001
+//SORTOUT DD DSN=TECN138.L1J.SHARE.PS2,                                 00130001
+//           DISP=(NEW,CATLG,DELETE),                                   00140001
+//           LIKE=TECN138.L1J.SHARE.PS1,                                00150001
+//           VOLUME=SER=ZAPRD4                                          00160001
+//SYSPRINT DD SYSOUT=*                                                  00170001
+//SYSOUT DD SYSOUT=*                                                    00180001
+//SYSIN DD *                                                            00190001
+  SORT FIELDS=(1,5,CH,A),EQUALS                                         00200001
+  SUM FIELDS=NONE                                                       00210001
+  OMIT COND=(1,5,CH,EQ,C' ')                                            00220001
+  OUTFIL STARTREC=2,ENDREC=9                                            00230001
+/*                                                                      00240001
+

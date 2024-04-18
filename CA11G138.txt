@@ -1,0 +1,308 @@
+       IDENTIFICATION DIVISION.                                         00010001
+       PROGRAM-ID. CA11G138.                                            00020001
+       ENVIRONMENT DIVISION.                                            00030001
+       INPUT-OUTPUT SECTION.                                            00040001
+       FILE-CONTROL.                                                    00050001
+           SELECT TI001-PS ASSIGN TO INPSHRPS                           00060001
+           ORGANIZATION IS SEQUENTIAL                                   00070001
+           ACCESS IS SEQUENTIAL                                         00080001
+           FILE STATUS IS WS-FST-TI001.                                 00090001
+           SELECT TO001-KSDS ASSIGN TO OUTSHRKS                         00100001
+           RECORD KEY IS TO001-KSDS-SHR-NO                              00110003
+           ORGANIZATION IS INDEXED                                      00111002
+           ACCESS IS RANDOM                                             00120002
+           FILE STATUS IS WS-FST-TO001.                                 00130001
+           SELECT TO002-PS ASSIGN TO ERRSHRPS                           00140001
+           ORGANIZATION IS SEQUENTIAL                                   00150001
+           ACCESS IS SEQUENTIAL                                         00160001
+           FILE STATUS IS WS-FST-TO002.                                 00170001
+       DATA DIVISION.                                                   00180001
+       FILE SECTION.                                                    00190001
+      ************************************************************      00191029
+      *                INPUT PS VARIABLES                        *      00192029
+      ************************************************************      00193029
+       FD TI001-PS.                                                     00200001
+       01 TI001-PS-REC.                                                 00210001
+           05 TI001-PS-SHR-NO          PIC X(05).                       00220001
+           05 F                        PIC X.                           00230001
+           05 TI001-PS-PER-HELD        PIC 9(02).                       00240001
+           05 F                        PIC X.                           00241001
+           05 TI001-PS-NO-OF-SHARES    PIC 9(03).                       00250001
+           05 F                        PIC X.                           00260001
+           05 TI001-PS-CORP-NAME       PIC X(05).                       00270001
+           05 F                        PIC X.                           00280001
+           05 TI001-PS-CURR-PRICE      PIC 9(03).9(02).                 00290001
+           05 F                        PIC X(55).                       00320001
+      ************************************************************      00321029
+      *                OUTPUT KSDS VARIABLES                     *      00322029
+      ************************************************************      00323029
+       FD TO001-KSDS.                                                   00330001
+       01 TO001-KSDS-REC.                                               00340001
+           05 TO001-KSDS-SHR-NO        PIC X(05).                       00360001
+           05 F                        PIC X.                           00370001
+           05 TO001-KSDS-PER-HELD      PIC 9(02).                       00380001
+           05 F                        PIC X.                           00390001
+           05 TO001-KSDS-NO-OF-SHARES  PIC 9(03).                       00400001
+           05 F                        PIC X.                           00410001
+           05 TO001-KSDS-CORP-NAME     PIC X(05).                       00420001
+           05 F                        PIC X.                           00430001
+           05 TO001-KSDS-CURR-PRICE    PIC 9(03).9(02).                 00440001
+           05 F                        PIC X.                           00450001
+           05 TO001-KSDS-CLASS         PIC X(02).                       00460001
+           05 F                        PIC X.                           00470001
+           05 TO001-KSDS-RANGE         PIC X(01).                       00480001
+           05 F                        PIC X.                           00490001
+           05 TO001-KSDS-OUT-SHR-PRICE PIC 9(05).9(03).                 00500001
+           05 F                        PIC X.                           00510001
+           05 TO001-KSDS-INC-TAX       PIC 9(04).9(03).                 00520016
+           05 F                        PIC X(30).                       00521001
+      ************************************************************      00522029
+      *              OUTPUT ERROR PS VARIABLES                   *      00523029
+      ************************************************************      00524029
+       FD TO002-PS.                                                     00530001
+       01 TO002-PS-REC.                                                 00540001
+           05 TO002-PS-SHR-NO          PIC X(05).                       00541001
+           05 F                        PIC X.                           00542001
+           05 TO002-PS-PER-HELD        PIC 9(02).                       00543001
+           05 F                        PIC X.                           00544001
+           05 TO002-PS-NO-OF-SHARES    PIC 9(03).                       00545001
+           05 F                        PIC X.                           00546001
+           05 TO002-PS-CORP-NAME       PIC X(05).                       00547001
+           05 F                        PIC X.                           00548001
+           05 TO002-PS-CURR-PRICE      PIC 9(03).9(02).                 00549003
+           05 F                        PIC X.                           00549101
+           05 TO002-PS-ERR-FIELD       PIC X(15).                       00550001
+           05 F                        PIC X(39).                       00560021
+       WORKING-STORAGE SECTION.                                         00570001
+       01 WS-VARS.                                                      00580001
+      ************************************************************      00581029
+      *      DECLARING CONDITION NAME ENTRIES FOR FILES          *      00582029
+      ************************************************************      00583029
+           05 WS-FST-TI001             PIC 9(02).                       00590003
+               88 CO-TI001-SUCC        VALUE 00.                        00600003
+               88 CO-TI001-EOF         VALUE 10.                        00610003
+           05 WS-FST-TO001             PIC 9(02).                       00611003
+               88 CO-TO001-SUCC        VALUE 00.                        00612003
+               88 CO-TO001-EOF         VALUE 10.                        00613003
+           05 WS-FST-TO002             PIC 9(02).                       00614003
+               88 CO-TO002-SUCC        VALUE 00.                        00615003
+               88 CO-TO002-EOF         VALUE 10.                        00616003
+      ************************************************************      00620129
+      *            DECLARING THE ARRAY VARIABLES                 *      00620229
+      ************************************************************      00620329
+           05 WS-ARR                   OCCURS 15 TIMES.                 00621014
+               10 WS-SHR-NO            PIC X(05).                       00622014
+               10 WS-NO-OF-SHARES      PIC 9(03).                       00623017
+               10 WS-CORP-NAME         PIC X(05).                       00624014
+               10 WS-PER-HELD          PIC 9(02).                       00625027
+           05 WS-ARR-INDX              PIC 9(02).                       00626014
+           05 WS-CLASS                 PIC X(02).                       00627014
+           05 WS-RANGE                 PIC X(01).                       00628014
+           05 WS-NEW-CURR-PRICE        PIC 9(03)V9(02).                 00628117
+           05 WS-OUT-SHR-PRICE         PIC 9(05)V9(03).                 00629015
+           05 WS-INC-TAX               PIC 9(04)V9(03).                 00629115
+       PROCEDURE DIVISION.                                              00630001
+       0000-MAIN-PARA.                                                  00640001
+           PERFORM 1000-INIT-PARA                                       00650001
+              THRU 1000-INIT-PARA-EXIT                                  00660001
+           PERFORM 2000-PROC-PARA                                       00670001
+              THRU 2000-PROC-PARA                                       00680001
+           PERFORM 9000-TERM-PARA                                       00690001
+              THRU 9000-TERM-PARA-EXIT                                  00700001
+           .                                                            00710006
+       0000-MAIN-PARA-EXIT.                                             00720001
+           EXIT.                                                        00730001
+       1000-INIT-PARA.                                                  00740001
+           CONTINUE.                                                    00750001
+       1000-INIT-PARA-EXIT.                                             00780001
+           EXIT.                                                        00790029
+       2000-PROC-PARA.                                                  00800001
+           PERFORM 2100-OPEN-PARA                                       00810001
+              THRU 2100-OPEN-PARA-EXIT                                  00820003
+           PERFORM 2200-READ-PARA                                       00821008
+              THRU 2200-READ-PARA                                       00822008
+             UNTIL CO-TI001-EOF                                         00823023
+           PERFORM 2300-CALC-PARA                                       00824014
+              THRU 2300-CALC-PARA-EXIT                                  00825014
+           VARYING WS-ARR-INDX FROM 1 BY 1 UNTIL WS-ARR-INDX > 15       00826014
+           PERFORM 2400-CLOSE-PARA                                      00830014
+              THRU 2400-CLOSE-PARA-EXIT                                 00840014
+           .                                                            00850004
+       2000-PROC-PARA-EXIT.                                             00860001
+           EXIT.                                                        00870001
+       2100-OPEN-PARA.                                                  00880001
+           OPEN INPUT TI001-PS                                          00890001
+           EVALUATE TRUE                                                00891003
+           WHEN CO-TI001-SUCC                                           00892003
+               CONTINUE                                                 00893029
+           WHEN OTHER                                                   00898003
+               DISPLAY 'TI001 OPEN ERROR   '  WS-FST-TI001              00899003
+               PERFORM 2400-CLOSE-PARA                                  00899129
+                  THRU 2400-CLOSE-PARA-EXIT                             00899229
+               PERFORM 9000-TERM-PARA                                   00899303
+                  THRU 9000-TERM-PARA-EXIT                              00899403
+           END-EVALUATE                                                 00899505
+           OPEN OUTPUT TO001-KSDS                                       00900001
+           EVALUATE TRUE                                                00901003
+           WHEN CO-TO001-SUCC                                           00902003
+               CONTINUE                                                 00903029
+           WHEN OTHER                                                   00904003
+               DISPLAY 'TO001 OPEN ERROR'  WS-FST-TO001                 00905008
+               PERFORM 2400-CLOSE-PARA                                  00905129
+                  THRU 2400-CLOSE-PARA-EXIT                             00905229
+               PERFORM 9000-TERM-PARA                                   00906003
+                  THRU 9000-TERM-PARA-EXIT                              00907003
+           END-EVALUATE                                                 00908005
+           OPEN OUTPUT TO002-PS                                         00910003
+           EVALUATE TRUE                                                00920003
+           WHEN CO-TO002-SUCC                                           00930003
+               STRING 'SHR-NO PER-HELD NO-OF-SHARES '                   00940130
+                      'CORP-NAME CURR-PRICE ERR-FIELD'                  00940213
+                      DELIMITED BY SIZE INTO TO002-PS-REC               00940313
+               END-STRING                                               00940413
+               WRITE TO002-PS-REC                                       00940513
+           WHEN OTHER                                                   00950003
+               DISPLAY 'TO002 OPEN ERROR   '  WS-FST-TO002              00960003
+               PERFORM 2400-CLOSE-PARA                                  00961029
+                  THRU 2400-CLOSE-PARA-EXIT                             00962029
+               PERFORM 9000-TERM-PARA                                   00970003
+                  THRU 9000-TERM-PARA-EXIT                              00980003
+           END-EVALUATE                                                 00990005
+           .                                                            01030001
+       2100-OPEN-PARA-EXIT.                                             01040009
+           EXIT.                                                        01050009
+       2200-READ-PARA.                                                  01060009
+           READ TI001-PS                                                01070009
+           DISPLAY TI001-PS-REC                                         01071022
+           EVALUATE TRUE                                                01080009
+           WHEN CO-TI001-SUCC                                           01090009
+               PERFORM 2210-VALID-PARA                                  01100009
+                  THRU 2210-VALID-PARA-EXIT                             01110009
+           WHEN CO-TI001-EOF                                            01120014
+               DISPLAY 'END OF FILE REACHED'                            01131014
+           WHEN OTHER                                                   01132014
+               DISPLAY 'FILE NOT READ'                                  01133014
+               PERFORM 2400-CLOSE-PARA                                  01134029
+                  THRU 2400-CLOSE-PARA-EXIT                             01135029
+               PERFORM 9000-TERM-PARA                                   01136029
+                  THRU 9000-TERM-PARA-EXIT                              01137029
+           END-EVALUATE                                                 01140009
+           .                                                            01150009
+       2200-READ-PARA-EXIT.                                             01151009
+           EXIT.                                                        01152009
+       2210-VALID-PARA.                                                 01160009
+           EVALUATE TRUE                                                01170010
+           WHEN TI001-PS-PER-HELD IS NOT NUMERIC                        01180010
+               MOVE TI001-PS-REC TO TO002-PS-REC                        01181034
+               MOVE 'PER-HELD' TO TO002-PS-ERR-FIELD                    01190010
+               PERFORM 2211-WRITE-ERR-PARA                              01200010
+                  THRU 2211-WRITE-ERR-PARA-EXIT                         01201010
+           WHEN TI001-PS-NO-OF-SHARES IS NOT NUMERIC                    01202010
+               MOVE TI001-PS-REC TO TO002-PS-REC                        01203034
+               MOVE 'NO-OF-SHARES' TO TO002-PS-ERR-FIELD                01210010
+               PERFORM 2211-WRITE-ERR-PARA                              01220010
+                  THRU 2211-WRITE-ERR-PARA-EXIT                         01230010
+           WHEN TI001-PS-CORP-NAME IS NOT GREATER THAN SPACE            01231016
+               MOVE TI001-PS-REC TO TO002-PS-REC                        01231134
+               MOVE 'NO-OF-SHARES' TO TO002-PS-ERR-FIELD                01232010
+               PERFORM 2211-WRITE-ERR-PARA                              01240010
+                  THRU 2211-WRITE-ERR-PARA-EXIT                         01250010
+           WHEN TI001-PS-CURR-PRICE(1:3) IS NOT NUMERIC OR              01260031
+                TI001-PS-CURR-PRICE(5:2) IS NOT NUMERIC OR              01261031
+                TI001-PS-CURR-PRICE(4:1) IS NOT EQUAL TO '.'            01262031
+               MOVE TI001-PS-REC TO TO002-PS-REC                        01263034
+               MOVE 'CURR-PRICE' TO TO002-PS-ERR-FIELD                  01270010
+               PERFORM 2211-WRITE-ERR-PARA                              01280010
+                  THRU 2211-WRITE-ERR-PARA-EXIT                         01290010
+           WHEN OTHER                                                   01300010
+               PERFORM 2212-ARRY-PARA                                   01310014
+                  THRU 2212-ARRY-PARA-EXIT                              01320014
+           END-EVALUATE                                                 01330010
+           .                                                            01340010
+       2210-VALID-PARA-EXIT.                                            01350010
+           EXIT.                                                        01360010
+       2211-WRITE-ERR-PARA.                                             01370010
+           WRITE TO002-PS-REC                                           01420012
+           EVALUATE TRUE                                                01421009
+           WHEN CO-TO002-SUCC                                           01422009
+                DISPLAY 'ERROR RECORD WRITTEN'                          01423033
+           WHEN OTHER                                                   01424009
+                DISPLAY 'WRITE FAILED' WS-FST-TO002                     01425009
+           END-EVALUATE                                                 01426009
+           .                                                            01430009
+       2211-WRITE-ERR-PARA-EXIT.                                        01440010
+           EXIT.                                                        01450009
+       2212-ARRY-PARA.                                                  01460014
+           ADD 1 TO WS-ARR-INDX                                         01470014
+           MOVE TI001-PS-SHR-NO TO WS-SHR-NO(WS-ARR-INDX)               01480014
+           MOVE TI001-PS-NO-OF-SHARES TO WS-NO-OF-SHARES(WS-ARR-INDX)   01490014
+           MOVE TI001-PS-CORP-NAME TO WS-CORP-NAME(WS-ARR-INDX)         01500014
+           MOVE TI001-PS-PER-HELD TO WS-PER-HELD(WS-ARR-INDX)           01510014
+           .                                                            01520014
+       2212-ARRY-PARA-EXIT.                                             01530014
+           EXIT.                                                        01540014
+       2300-CALC-PARA.                                                  01550014
+           EVALUATE TRUE                                                01560014
+           WHEN WS-PER-HELD(WS-ARR-INDX)> 10                            01570016
+               COMPUTE WS-NEW-CURR-PRICE ROUNDED =                      01580016
+               WS-NO-OF-SHARES(WS-ARR-INDX) +                           01590016
+               FUNCTION SQRT(WS-NO-OF-SHARES(WS-ARR-INDX))              01591016
+               EVALUATE TRUE                                            01600014
+               WHEN WS-CORP-NAME(WS-ARR-INDX) = 'INFY'                  01610016
+                   AND WS-PER-HELD(WS-ARR-INDX) > 15                    01611016
+                   MOVE 'C2' TO WS-CLASS                                01620016
+                   MOVE 'H' TO WS-RANGE                                 01630016
+               WHEN WS-CORP-NAME(WS-ARR-INDX) = 'ACC'                   01640016
+                   AND WS-PER-HELD(WS-ARR-INDX) > 15                    01641016
+                   MOVE 'C1' TO WS-CLASS                                01650016
+                   MOVE 'H' TO WS-RANGE                                 01660016
+               WHEN WS-CORP-NAME(WS-ARR-INDX) = 'TCS'                   01670016
+                   AND WS-PER-HELD(WS-ARR-INDX) > 10                    01671016
+                   MOVE 'C3' TO WS-CLASS                                01680016
+                   MOVE 'M' TO WS-RANGE                                 01690016
+               WHEN OTHER                                               01700015
+                   MOVE 'C4' TO WS-CLASS                                01710016
+                   MOVE 'L' TO WS-RANGE                                 01720016
+               END-EVALUATE                                             01730015
+      ************************************************************      01731031
+      *           CALLING THE SUB-PROGRAM CA21G138              *       01732031
+      ************************************************************      01733031
+               CALL 'CA21G138' USING WS-NO-OF-SHARES(WS-ARR-INDX)       01740018
+               WS-OUT-SHR-PRICE, WS-INC-TAX, WS-NEW-CURR-PRICE,         01750017
+               WS-PER-HELD(WS-ARR-INDX)                                 01751017
+               PERFORM 2310-WRITE-KSDS-PARA                             01760015
+                  THRU 2310-WRITE-KSDS-PARA-EXIT                        01770015
+           END-EVALUATE                                                 01780015
+           .                                                            01790015
+       2300-CALC-PARA-EXIT.                                             01800016
+           EXIT.                                                        01810016
+       2310-WRITE-KSDS-PARA.                                            01820016
+           MOVE SPACES TO TO001-KSDS-REC                                01821028
+           MOVE WS-SHR-NO(WS-ARR-INDX) TO TO001-KSDS-SHR-NO             01830016
+           MOVE WS-PER-HELD(WS-ARR-INDX) TO TO001-KSDS-PER-HELD         01840026
+           MOVE WS-NO-OF-SHARES(WS-ARR-INDX) TO                         01850026
+                TO001-KSDS-NO-OF-SHARES                                 01860026
+           MOVE WS-CORP-NAME(WS-ARR-INDX) TO TO001-KSDS-CORP-NAME       01870016
+           MOVE WS-NEW-CURR-PRICE TO TO001-KSDS-CURR-PRICE              01880016
+           MOVE WS-CLASS TO TO001-KSDS-CLASS                            01890016
+           MOVE WS-RANGE TO TO001-KSDS-RANGE                            01900016
+           MOVE WS-OUT-SHR-PRICE TO                                     01910016
+           TO001-KSDS-OUT-SHR-PRICE                                     01920016
+           MOVE WS-INC-TAX TO TO001-KSDS-INC-TAX                        01930016
+           DISPLAY WS-SHR-NO(WS-ARR-INDX) ' IS COPIED'                  01931021
+           WRITE TO001-KSDS-REC                                         01940016
+           .                                                            01950016
+       2310-WRITE-KSDS-PARA-EXIT.                                       01960016
+           EXIT.                                                        01970016
+       2400-CLOSE-PARA.                                                 01980016
+           CLOSE TI001-PS                                               01990016
+           CLOSE TO001-KSDS                                             02000016
+           CLOSE TO002-PS                                               02010016
+           .                                                            02020016
+       2400-CLOSE-PARA-EXIT.                                            02030016
+           EXIT.                                                        02040016
+       9000-TERM-PARA.                                                  02050016
+           STOP RUN.                                                    02060016
+       9000-TERM-PARA-EXIT.                                             02070016
+           EXIT.                                                        02080016
+
